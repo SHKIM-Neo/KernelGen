@@ -17,10 +17,10 @@
 
 enum {
     CHOICE_H = 'h',
-	CHOICE_T = 't',
-	CHOICE_WIDTH = 'x',
-	CHOICE_HEIGHT = 'y',
-	CHOICE_COUNT = 'c',
+    CHOICE_T = 't',
+    CHOICE_WIDTH = 'x',
+    CHOICE_HEIGHT = 'y',
+    CHOICE_COUNT = 'c',
     CHOICE_MIN = 'i',
     CHOICE_MAX = 'a'
 };
@@ -43,16 +43,16 @@ struct kernel_options{
 };
 
 static void print_usage() {
-	puts("usage: kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )");
-	puts("");
-	puts("kernelgen frontend");
-	puts("");
-	puts("optional arguments:");
-	puts("  --help                show this help message and exit");
-	puts("  --type TYPE           set kernel data type [default : FLOAT32]");
-	puts("  --width WIDTH         set kernel width [default : 128]");
-	puts("  --height HEIGHT       set kernel height [default : 128]");
-	puts("  --count COUNT         number of kernels to be created [default : 512]");
+    puts("usage: kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )");
+    puts("");
+    puts("kernelgen frontend");
+    puts("");
+    puts("optional arguments:");
+    puts("  --help                show this help message and exit");
+    puts("  --type TYPE           set kernel data type [default : FLOAT32]");
+    puts("  --width WIDTH         set kernel width [default : 128]");
+    puts("  --height HEIGHT       set kernel height [default : 128]");
+    puts("  --count COUNT         number of kernels to be created [default : 512]");
     puts("  --min MIN             set min value in random number generator (range : [min, max], default 0.0)");
     puts("  --max MAX             set max value in random number generator (range : [min, max], default 1.0)");
 }
@@ -180,9 +180,9 @@ int main(int argc, char** argv) {
         options.value_max = "1.0";
     }
 
-	if(options.flag_h == false)
+    if(options.flag_h == false)
         do_gen(&options);
 	else
-		print_usage();
+        print_usage();
 	return 0;
 }
