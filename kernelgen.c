@@ -21,7 +21,8 @@ enum {
 	CHOICE_WIDTH = 'x',
 	CHOICE_HEIGHT = 'y',
 	CHOICE_COUNT = 'c',
-    CHOICE_MAX = 'm'
+    CHOICE_MIN = 'i',
+    CHOICE_MAX = 'a'
 };
 
 struct kernel_options{
@@ -30,15 +31,19 @@ struct kernel_options{
     bool flag_width;
     bool flag_height;
     bool flag_count;
+    bool flag_min;
+    bool flag_max;
 
     char* value_type;
     char* value_width;
     char* value_height;
     char* value_count;
+    char* value_min;
+    char* value_max;
 };
 
 static void print_usage() {
-	puts("usage: kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --max MAX )");
+	puts("usage: kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )");
 	puts("");
 	puts("kernelgen frontend");
 	puts("");
@@ -48,28 +53,45 @@ static void print_usage() {
 	puts("  --width WIDTH         set kernel width [default : 128]");
 	puts("  --height HEIGHT       set kernel height [default : 128]");
 	puts("  --count COUNT         number of kernels to be created [default : 512]");
-    puts("  --max MAX             set max value in random number generator (range : [0, max], default 1.0)");
+    puts("  --min MIN             set min value in random number generator (range : [min, max], default 0.0)");
+    puts("  --max MAX             set max value in random number generator (range : [min, max], default 1.0)");
 }
 
-
-//generate float [0, max] range
-float randomgen(float max){
-    float rand_f = (float)rand()/(float)(RAND_MAX/max);
+//generate float [min, max] range
+float randomgen(float min, float max){
+    float rand_f = min + (float) (rand()) /( (float) (RAND_MAX/(max - min)));
     //printf("rand : %f\n", rand_f);
     return rand_f;
 }
 
 void do_gen(struct kernel_options* option){
-    printf("option info : type = %s, width = %s, height = %s, count = %s", option->value_type, option->value_width, option->value_height, option->value_count);
+    printf("option info : type = %s, width = %s, height = %s, count = %s\n", option->value_type, option->value_width, option->value_height, option->value_count);
 
     int width  = atoi(option->value_width);
     int height = atoi(option->value_height);
     int count  = atoi(option->value_count);
+    float min = atof(option->value_min);
+    float max = atof(option->value_max);
 
-    float arr[width*height];
+    for(int c = 0; c < count; c++){
+        float arr[width * height];
+        for(int i = 0; i < width * height; i++){
+            arr[i] = randomgen(min, max);
+        }
+        char filename[1024];
+        sprintf(filename, "%s_%s_%s_%d.data", option->value_type, option->value_width, option->value_height, c);
 
-    for(int i=0; i<width*height; i++){
-        arr[i] = randomgen(1.0);
+        if( access(filename, F_OK) != -1 ) {
+		    remove(filename);
+	    }
+        FILE *f = fopen(filename, "wb");
+        
+        for(int i = 0; i < width * height; i++){
+            float f_data = arr[i];
+            fwrite(&f_data, sizeof(float), 1, f);
+        }
+
+        fclose(f);
     }
 }
 
@@ -81,6 +103,8 @@ int main(int argc, char** argv) {
 		{ "width",     required_argument, NULL, CHOICE_WIDTH },
 		{ "height",    required_argument, NULL, CHOICE_HEIGHT },
 		{ "count",     required_argument, NULL, CHOICE_COUNT },
+        { "min",       required_argument, NULL, CHOICE_MIN},
+        { "max",       required_argument, NULL, CHOICE_MAX},
 		{ NULL, 0, NULL, 0 },
 	};
 
@@ -116,6 +140,18 @@ int main(int argc, char** argv) {
                 if(options.value_count == NULL)
                     options.value_count = "512";
 				break;
+            case CHOICE_MIN:
+				options.flag_min = true;
+                options.value_min = optarg;
+                if(options.value_min == NULL)
+                    options.value_min = "0.0";
+				break;
+            case CHOICE_MAX:
+				options.flag_max = true;
+                options.value_max = optarg;
+                if(options.value_max == NULL)
+                    options.value_max = "1.0";
+				break;
 		}
 	}
     //init default value
@@ -133,7 +169,15 @@ int main(int argc, char** argv) {
     }
     if(!options.flag_count) {
         options.flag_count = true;
-        options.value_count = "512";
+        options.value_count = "12";
+    }
+    if(!options.flag_min) {
+        options.flag_min = true;
+        options.value_min = "0.0";
+    }
+    if(!options.flag_max) {
+        options.flag_max = true;
+        options.value_max = "1.0";
     }
 
 	if(options.flag_h == false)
