@@ -14,8 +14,8 @@ Binary file generator of kernel or image(feature map) with random float number
 kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )
 ```
 - type : only FLOAT32 (other type not support)
-- width : width of kernel or feature map
-- height : height of kernel or feature map
-- count : number of kernel or feature map
-- min : min value of kernel or feature map (this value use on random float number generation)
-- max : max value of kernel or feature map (this value use on random float number generation)
+- width : width of kernel or feature map - default : 128
+- height : height of kernel or feature map - default : 128
+- count : number of kernel or feature map - default : 512
+- min : min value of kernel or feature map (this value use on random float number generation) - default : 0.0
+- max : max value of kernel or feature map (this value use on random float number generation) - default : 1.0
