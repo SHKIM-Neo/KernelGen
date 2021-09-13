@@ -10,7 +10,9 @@ Binary file generator of kernel or image(feature map) with random float number
 - Windows : gcc kernelgen.c -o kernelge.exe
 
 ## Run
-- kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )
+```
+kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )
+```
 - type : only FLOAT32 (other type not support)
 - width : width of kernel or feature map
 - height : height of kernel or feature map
