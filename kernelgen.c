@@ -6,50 +6,21 @@
  *  it under the terms of the MIT License as published by the Free Software
  *  Foundation, either version 3 of the License, or (at your option) any later version.
  */
-
-#include <stdio.h>
-#include <assert.h>
-#include <stdbool.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-enum {
-    CHOICE_H = 'h',
-    CHOICE_T = 't',
-    CHOICE_WIDTH = 'x',
-    CHOICE_HEIGHT = 'y',
-    CHOICE_COUNT = 'c',
-    CHOICE_MIN = 'i',
-    CHOICE_MAX = 'a'
-};
-
-struct kernel_options{
-    bool flag_h;
-    bool flag_type;
-    bool flag_width;
-    bool flag_height;
-    bool flag_count;
-    bool flag_min;
-    bool flag_max;
-
-    char* value_type;
-    char* value_width;
-    char* value_height;
-    char* value_count;
-    char* value_min;
-    char* value_max;
-};
+#include "include/kernelgen.h"
+#include "include/simpleconv.h"
 
 static void print_usage() {
-    puts("usage: kernelgen [--help] (--type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )");
+    puts("usage: kernelgen [--help] (--exam EXAM | --input FILE_PATH | --kernel KERNEL_DIR ) (--type TYPE | --dtype TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --min MIN | --max MAX )");
     puts("");
     puts("kernelgen frontend");
     puts("");
     puts("optional arguments:");
     puts("  --help                show this help message and exit");
-    puts("  --type TYPE           set kernel data type [default : FLOAT32]");
+    puts("  --exam                select example (implemented conv2d only)");
+    puts("  --input               set input file path (binary image or feature map)");
+    puts("  --kernel              set kernel directory (selected all kernel files in given directory path)");
+    puts("  --type TYPE           set output file type (it can be \"INPUT\" or \"KERNEL\")");
+    puts("  --dtype TYPE          set kernel data type [default : FLOAT32]");
     puts("  --width WIDTH         set kernel width [default : 128]");
     puts("  --height HEIGHT       set kernel height [default : 128]");
     puts("  --count COUNT         number of kernels to be created [default : 512]");
@@ -65,8 +36,6 @@ float randomgen(float min, float max){
 }
 
 void do_gen(struct kernel_options* option){
-    printf("option info : type = %s, width = %s, height = %s, count = %s\n", option->value_type, option->value_width, option->value_height, option->value_count);
-
     int width  = atoi(option->value_width);
     int height = atoi(option->value_height);
     int count  = atoi(option->value_count);
@@ -106,6 +75,9 @@ int main(int argc, char** argv) {
         { "count",     required_argument, NULL, CHOICE_COUNT },
         { "min",       required_argument, NULL, CHOICE_MIN},
         { "max",       required_argument, NULL, CHOICE_MAX},
+        { "exam",      required_argument, NULL, CHOICE_EXAM},
+        { "input",     required_argument, NULL, CHOICE_INPUT},
+        { "kernel",    required_argument, NULL, CHOICE_KERNEL},
         { NULL, 0, NULL, 0 },
     };
 
@@ -153,13 +125,23 @@ int main(int argc, char** argv) {
                 if(options.value_max == NULL)
                     options.value_max = "1.0";
                 break;
+            case CHOICE_EXAM:
+                options.flag_exam = true;
+                options.value_exam = optarg;
+                if(options.value_exam == NULL)
+                    options.value_exam = "CONV2D";
+                break;
+            case CHOICE_INPUT:
+                options.flag_input = true;
+                options.value_input = optarg;
+                break;
+            case CHOICE_KERNEL:
+                options.flag_kernel = true;
+                options.value_kernel = optarg;
+                break;
         }
     }
     //init default value
-    if(!options.flag_type) {
-        options.flag_type = true;
-        options.value_type = "FLOAT32";
-    }
     if(!options.flag_width) {
         options.flag_width = true;
         options.value_width = "128";
@@ -181,9 +163,18 @@ int main(int argc, char** argv) {
         options.value_max = "1.0";
     }
 
-    if(options.flag_h == false)
+    if(options.flag_type)
         do_gen(&options);
-    else
+
+    if(options.flag_exam){
+        if(options.flag_input == false || options.value_input == NULL || options.flag_kernel == false || options.value_kernel == NULL){
+            puts("argument [--input FILE_PATH] or [--kernel DIR] was not given.");
+            return 0;
+        }
+        conv2d(&options);
+    }
+
+    if(options.flag_h)
         print_usage();
     return 0;
 }
