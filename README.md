@@ -15,5 +15,5 @@ Binary file generator of kernel or image(feature map) with random float number
 - width : width of kernel or feature map
 - height : height of kernel or feature map
 - count : number of kernel or feature map
-- min : min value of kernel or feature map (this value use on random float number generate)
-- max : max value of kernel or feature map (this value use on random float number generate)
+- min : min value of kernel or feature map (this value use on random float number generation)
+- max : max value of kernel or feature map (this value use on random float number generation)
