@@ -82,8 +82,9 @@ void do_gen(struct kernel_options* option){
         sprintf(filename, "%s_%s_%s_%d.data", option->value_type, option->value_width, option->value_height, c);
 
         if( access(filename, F_OK) != -1 ) {
-		    remove(filename);
-	    }
+            remove(filename);
+        }
+
         FILE *f = fopen(filename, "wb");
         
         for(int i = 0; i < width * height; i++){
@@ -97,63 +98,63 @@ void do_gen(struct kernel_options* option){
 
 int main(int argc, char** argv) {
     const char* short_form = "h:txyc";
-	const struct option long_form[] = {
-		{ "help",      no_argument,       NULL, CHOICE_H },
-		{ "type",      required_argument, NULL, CHOICE_T },
-		{ "width",     required_argument, NULL, CHOICE_WIDTH },
-		{ "height",    required_argument, NULL, CHOICE_HEIGHT },
-		{ "count",     required_argument, NULL, CHOICE_COUNT },
+    const struct option long_form[] = {
+        { "help",      no_argument,       NULL, CHOICE_H },
+        { "type",      required_argument, NULL, CHOICE_T },
+        { "width",     required_argument, NULL, CHOICE_WIDTH },
+        { "height",    required_argument, NULL, CHOICE_HEIGHT },
+        { "count",     required_argument, NULL, CHOICE_COUNT },
         { "min",       required_argument, NULL, CHOICE_MIN},
         { "max",       required_argument, NULL, CHOICE_MAX},
-		{ NULL, 0, NULL, 0 },
-	};
+        { NULL, 0, NULL, 0 },
+    };
 
-	struct kernel_options options = {};
-	int longindex = 0;
-	int choice = -1;
-	while((choice = getopt_long(argc, argv, short_form, long_form, &longindex)) >= 0) {
-		switch(choice) {
-			case CHOICE_H:
-				options.flag_h = true;
-				break;
-			case CHOICE_T:
-				options.flag_type = true;
-				options.value_type = optarg;
+    struct kernel_options options = {};
+    int longindex = 0;
+    int choice = -1;
+    while((choice = getopt_long(argc, argv, short_form, long_form, &longindex)) >= 0) {
+        switch(choice) {
+            case CHOICE_H:
+                options.flag_h = true;
+                break;
+            case CHOICE_T:
+                options.flag_type = true;
+                options.value_type = optarg;
                 if(options.value_type == NULL)
                     options.value_type = "FLOAT32";
-				break;
-			case CHOICE_WIDTH:
-				options.flag_width = true;
+                break;
+            case CHOICE_WIDTH:
+                options.flag_width = true;
                 options.value_width = optarg;
                 if(options.value_width == NULL)
                     options.value_width = "128";
-				break;
-			case CHOICE_HEIGHT:
-				options.flag_height = true;
+                break;
+            case CHOICE_HEIGHT:
+                options.flag_height = true;
                 options.value_height = optarg;
                 if(options.value_height == NULL)
                     options.value_height = "128";
-				break;
-			case CHOICE_COUNT:
-				options.flag_count = true;
+                break;
+            case CHOICE_COUNT:
+                options.flag_count = true;
                 options.value_count = optarg;
                 if(options.value_count == NULL)
                     options.value_count = "512";
-				break;
+                break;
             case CHOICE_MIN:
-				options.flag_min = true;
+                options.flag_min = true;
                 options.value_min = optarg;
                 if(options.value_min == NULL)
                     options.value_min = "0.0";
-				break;
+                break;
             case CHOICE_MAX:
-				options.flag_max = true;
+                options.flag_max = true;
                 options.value_max = optarg;
                 if(options.value_max == NULL)
                     options.value_max = "1.0";
-				break;
-		}
-	}
+                break;
+        }
+    }
     //init default value
     if(!options.flag_type) {
         options.flag_type = true;
@@ -182,7 +183,7 @@ int main(int argc, char** argv) {
 
     if(options.flag_h == false)
         do_gen(&options);
-	else
+    else
         print_usage();
-	return 0;
+    return 0;
 }
