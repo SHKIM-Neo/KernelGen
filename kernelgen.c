@@ -95,7 +95,7 @@ int _getflist(const char* path, char** f_list){
 }
 
 
-char *basename(char const *path)
+char* _basename(char const *path)
 {
     char *s = strrchr(path, '/');
     if (!s)
@@ -117,6 +117,17 @@ int _getfloatcount(char* fname){
     return count;
 }
 
+void _readbinary(const char *path, float* data, int count) {
+    FILE *file = fopen(path, "rb"); 
+    if (file == NULL) { 
+        printf("파일을 읽기 모드로 열 수 없습니다.\n"); 
+        return; 
+    } 
+    
+    fread(data, sizeof(float), count, file); 
+    fclose(file);
+}
+
 void do_conv(struct kernel_options* option) {
 
     //file exist check
@@ -135,8 +146,8 @@ void do_conv(struct kernel_options* option) {
     int input_fcount, kernel_fcount;
     char* input_f_name, *kernel_f_name;
 
-    input_f_name = basename(option->value_input);
-    kernel_f_name = basename(option->value_kernel);
+    input_f_name = _basename(option->value_input);
+    kernel_f_name = _basename(option->value_kernel);
 
     printf("input fname : %s\n", input_f_name);
     printf("kernel fname : %s\n", kernel_f_name);
@@ -148,14 +159,12 @@ void do_conv(struct kernel_options* option) {
     printf("kernel fcount : %d\n", kernel_fcount);
 
     //malloc using float count
+    float* input_data = (float*) malloc(sizeof(float) * input_fcount);
+    float* kernel_data = (float*) malloc(sizeof(float) * kernel_fcount);
 
     //read binary file
-
-    float* input;
-    float* kernel;
-    //file read
-    
-
+    _readbinary(option->value_input, input_data, input_fcount);
+    _readbinary(option->value_kernel, kernel_data, kernel_fcount);
 
     //run conv
 }
