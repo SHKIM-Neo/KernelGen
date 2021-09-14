@@ -1,3 +1,3 @@
 #include "kernelgen.h"
 
-int conv2d(struct kernel_options* options);
+int conv2d(float* input, float* kernel, int group, int* kernel_shape, int* pads);

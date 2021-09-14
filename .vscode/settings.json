@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "simpleconv.h": "c"
+        "simpleconv.h": "c",
+        "dirent.h": "c"
     }
 }
