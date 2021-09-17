@@ -18,40 +18,33 @@ static void print_usage() {
     puts("  --help                show this help message and exit");
     puts("");
     puts(" optional arguments - for kernel generation : ");
-    puts("  --type TYPE           set output file type (it can be \"INPUT\" or \"KERNEL\")");
-    puts("  --dtype TYPE          set data type of kernel [default : FLOAT32]");
-    puts("  --width WIDTH         set width of kernel [default : 128]");
-    puts("  --height HEIGHT       set height of kernel [default : 128]");
-    puts("  --channel CHANNEL     set channel of kernel [default : 1]");
-    puts("  --count COUNT         number of kernels to be created [default : 512]");
-    puts("  --min MIN             set min value in random number generator (range : [min, max], default 0.0)");
-    puts("  --max MAX             set max value in random number generator (range : [min, max], default 1.0)");
+    puts("  --type TYPE           set output file type [string] -- (it can be \"INPUT\" or \"KERNEL\")");
+    puts("  --dtype TYPE          set data type of kernel [string] -- (default : FLOAT32)");
+    puts("  --width WIDTH         set width of kernel [int] -- (default : 128)");
+    puts("  --height HEIGHT       set height of kernel [int] -- (default : 128)");
+    puts("  --channel CHANNEL     set channel of kernel [int] -- (default : 1)");
+    puts("  --count COUNT         number of kernels to be created [int] -- (default : 512)");
+    puts("  --min MIN             set min value in random number generator [float] -- (range : [min, max], default 0.0)");
+    puts("  --max MAX             set max value in random number generator [float] -- (range : [min, max], default 1.0)");
     puts(" optional arguments - for running example : ");
-    puts("  --exam                select example (implemented conv2d only)");
-    puts("  --input               set input file path (binary image or feature map)");
-    puts("  --kernel              set kernel directory (selected all kernel files in given directory path)");
-}
-
-float bintofloat(unsigned int x) {
-    union {
-        unsigned int  x;
-        float  f;
-    } temp;
-    temp.x = x;
-    return temp.f;
+    puts("  --exam                select example [string] -- (implemented conv2d only)");
+    puts("  --input               set input file path [string] -- (binary image or feature map)");
+    puts("  --kernel              set kernel directory [string] -- (selected all kernel files in given directory path)");
+    puts("  --group               set param group for convolution [int] -- (default : 1)");
+    puts("  --pads                set param pads for convolution. [int] -- (default : 0)");
 }
 
 //generate float [min, max] range
 float _randomgen(float min, float max){
     float rand_f = min + (float) (rand()) / ((float) (RAND_MAX / (max - min)));
-    printf("rand : %f\n", rand_f);
+    //printf("rand : %f\n", rand_f);
     return rand_f;
 }
 
 int _filefilter(const char* f_name) { 
     char *ext; 
     ext = strrchr(f_name, '.'); 
-    printf("extension : %s\n", ext);
+    //printf("extension : %s\n", ext);
     if(ext == NULL) { 
         return 0; // no ext 
     } 
@@ -64,7 +57,6 @@ int _filefilter(const char* f_name) {
 }
 
 int _getflist(const char* path, char** f_list){
-    puts("searching..");
     DIR *dir = opendir(path);
     struct stat filestat;
     int count = 0;
@@ -81,11 +73,11 @@ int _getflist(const char* path, char** f_list){
         //printf("%s %ld\n",de->d_name, de->d_ino);
         stat(de->d_name,&filestat);
         if( S_ISDIR(filestat.st_mode) ){
-            printf("%4s: %s\n","Dir",de->d_name);
+            //printf("%4s: %s\n","Dir",de->d_name);
         }
         else{
-            printf("%4s: %s\n","File",de->d_name);
-            if(_filefilter(de->d_name) == 1){
+            //printf("%4s: %s\n","File",de->d_name);
+            if(_filefilter(de->d_name) == 1) {
                 count++;
             }
         }
@@ -104,14 +96,17 @@ char* _basename(char const *path)
         return strtok(strdup(s + 1), ".");
 }
 
-int _getfloatcount(char* fname){
+int _getfloatcount(char* fname, int* shape) {
     int count = 1;
+    int idx = 0;
     char *temp = strtok(fname,"_");
-    
     while (temp != NULL) { 
         int val = atoi(temp);
-        if(val != 0)
+        if(idx < 3){
             count *= val;
+            shape[idx] = val;
+            idx++;
+        }
         temp = strtok(NULL, "_");
     }
     return count;
@@ -144,6 +139,12 @@ void do_conv(struct kernel_options* option) {
     char **f_list;
     //get float count from filename
     int input_fcount, kernel_fcount;
+    int input_shape[3];
+    int kernel_shape[3];
+    int output_shape[3];
+    int group = atoi(option->value_group);
+    int* pads;
+
     char* input_f_name, *kernel_f_name;
 
     input_f_name = _basename(option->value_input);
@@ -152,8 +153,8 @@ void do_conv(struct kernel_options* option) {
     printf("input fname : %s\n", input_f_name);
     printf("kernel fname : %s\n", kernel_f_name);
 
-    input_fcount = _getfloatcount(input_f_name);
-    kernel_fcount = _getfloatcount(kernel_f_name);
+    input_fcount = _getfloatcount(input_f_name, input_shape);
+    kernel_fcount = _getfloatcount(kernel_f_name, kernel_shape);
 
     printf("input fcount : %d\n", input_fcount);
     printf("kernel fcount : %d\n", kernel_fcount);
@@ -167,9 +168,26 @@ void do_conv(struct kernel_options* option) {
     _readbinary(option->value_kernel, kernel_data, kernel_fcount);
 
     //run conv
+    struct tensor* input_tensor = malloc(sizeof(struct tensor));
+    input_tensor->data = input_data;
+    input_tensor->n_dim = 3;
+    input_tensor->shape = input_shape;
+
+    struct tensor* kernel_tensor = malloc(sizeof(struct tensor));
+    kernel_tensor->data = kernel_data;
+    kernel_tensor->n_dim = 3;
+    kernel_tensor->shape = kernel_shape;
+
+    int output_size = getresultshape(input_tensor, kernel_tensor, pads);
+    struct tensor* output_tensor = malloc(sizeof(struct tensor));
+    output_tensor->n_dim = 3;
+    output_tensor->shape = output_shape;
+    output_tensor->data = malloc(sizeof(float) * output_size);
+
+    conv2d(input_tensor, output_tensor, kernel_tensor, group, pads);
 }
 
-void do_gen(struct kernel_options* option){
+void do_gen(struct kernel_options* option) {
     int width  = atoi(option->value_width);
     int height = atoi(option->value_height);
     int channel = atoi(option->value_channel);
@@ -178,7 +196,7 @@ void do_gen(struct kernel_options* option){
     float max = atof(option->value_max);
     char* ext;
 
-    if(strcmp(option->value_type, "INPUT") == 0){
+    if(strcmp(option->value_type, "INPUT") == 0) {
         ext = "input";
     } else {
         ext = "kernel";
@@ -194,13 +212,13 @@ void do_gen(struct kernel_options* option){
 
         FILE *f = fopen(filename, "wb");
 
-        for(int ch = 0; ch < channel; ch++){
+        for(int ch = 0; ch < channel; ch++) {
             float arr[width * height];
-            for(int i = 0; i < width * height; i++){
+            for(int i = 0; i < width * height; i++) {
                 arr[i] = _randomgen(min, max);
             }
 
-            for(int i = 0; i < width * height; i++){
+            for(int i = 0; i < width * height; i++) {
                 float f_data = arr[i];
                 fwrite(&f_data, sizeof(float), 1, f);
             }
@@ -224,6 +242,8 @@ int main(int argc, char** argv) {
         { "exam",      required_argument, NULL, CHOICE_EXAM},
         { "input",     required_argument, NULL, CHOICE_INPUT},
         { "kernel",    required_argument, NULL, CHOICE_KERNEL},
+        { "group",     required_argument, NULL, CHOICE_GROUP},
+        { "pads",      required_argument, NULL, CHOICE_PADS},
         { NULL, 0, NULL, 0 },
     };
 
@@ -295,10 +315,18 @@ int main(int argc, char** argv) {
                 options.flag_kernel = true;
                 options.value_kernel = optarg;
                 break;
+            case CHOICE_GROUP:
+                options.flag_group = true;
+                options.value_group = optarg;
+                break;
+            case CHOICE_PADS:
+                options.flag_pads = true;
+                options.value_pads = optarg;
+                break;
         }
     }
     
-    if(options.flag_type){
+    if(options.flag_type) {
         if(!options.flag_dtype) {
             options.flag_dtype = true;
             options.value_dtype = "FLOAT32";
@@ -330,16 +358,26 @@ int main(int argc, char** argv) {
         do_gen(&options);
     }
 
-    if(options.flag_exam){
-        if(options.flag_input == false || options.value_input == NULL || options.flag_kernel == false || options.value_kernel == NULL){
+    if(options.flag_exam) {
+        if(!options.flag_group) {
+            options.flag_group = true;
+            options.value_group = "1";
+        }
+
+        if(!options.flag_group) {
+            options.flag_group = true;
+            options.value_group = "1";
+        }
+
+        if(options.flag_input == false || options.value_input == NULL || options.flag_kernel == false || options.value_kernel == NULL) {
             puts("argument [--input FILE_PATH] or [--kernel DIR] was not given.");
             return 0;
         }
         do_conv(&options);
-        //conv2d(&options);
     }
 
     if(options.flag_h)
         print_usage();
+
     return 0;
 }

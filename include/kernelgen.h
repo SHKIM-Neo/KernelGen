@@ -12,7 +12,7 @@
 #include <errno.h>
 
 enum {
-    CHOICE_H = 'h',
+    CHOICE_H = 'a',
     CHOICE_T = 't',
     CHOICE_DTYPE,
     CHOICE_WIDTH,
@@ -23,7 +23,9 @@ enum {
     CHOICE_MAX,
     CHOICE_EXAM = 'e',
     CHOICE_INPUT,
-    CHOICE_KERNEL
+    CHOICE_KERNEL,
+    CHOICE_GROUP,
+    CHOICE_PADS
 };
 
 struct kernel_options{
@@ -39,6 +41,8 @@ struct kernel_options{
     bool flag_exam;
     bool flag_input;
     bool flag_kernel;
+    bool flag_group;
+    bool flag_pads;
 
     char* value_type;
     char* value_dtype;
@@ -51,4 +55,6 @@ struct kernel_options{
     char* value_exam;
     char* value_input;
     char* value_kernel;
+    char* value_group;
+    char* value_pads;
 };
