@@ -12,7 +12,7 @@
 static void print_usage() {
     puts("usage: kernelgen [--help]");
     puts("                 (--type TYPE | --dtype TYPE | --width WIDTH | --height HEIGHT | --channel CHANNEL | --count COUNT | --min MIN | --max MAX )");
-    puts("                 (--exam EXAM | --input FILE_PATH | --kernel KERNEL_DIR | --group GROUP | --pads [] ) ");
+    puts("                 (--exam EXAM | --input FILE_PATH | --kernel KERNEL_PATH | --group GROUP | --pads [] ) ");
     puts("");
     puts(" help");
     puts("  --help                show this help message and exit");
