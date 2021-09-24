@@ -37,14 +37,12 @@ static void print_usage() {
 //generate float [min, max] range
 float _randomgen(float min, float max){
     float rand_f = min + (float) (rand()) / ((float) (RAND_MAX / (max - min)));
-    //printf("rand : %f\n", rand_f);
     return rand_f;
 }
 
 int _filefilter(const char* f_name) { 
     char *ext; 
     ext = strrchr(f_name, '.'); 
-    //printf("extension : %s\n", ext);
     if(ext == NULL) { 
         return 0; // no ext 
     } 
@@ -70,13 +68,11 @@ int _getflist(const char* path, char** f_list){
  
     while((de = readdir(dir))!=NULL)
     {
-        //printf("%s %ld\n",de->d_name, de->d_ino);
         stat(de->d_name,&filestat);
         if( S_ISDIR(filestat.st_mode) ){
             //printf("%4s: %s\n","Dir",de->d_name);
         }
         else{
-            //printf("%4s: %s\n","File",de->d_name);
             if(_filefilter(de->d_name) == 1) {
                 count++;
             }
@@ -89,6 +85,7 @@ int _getflist(const char* path, char** f_list){
 
 char* _basename(char const *path)
 {
+    srand((unsigned int)time(NULL));
     char *s = strrchr(path, '/');
     if (!s)
         return strtok(strdup(path), ".");
@@ -139,11 +136,13 @@ void do_conv(struct kernel_options* option) {
     char **f_list;
     //get float count from filename
     int input_fcount, kernel_fcount;
-    int input_shape[3];
-    int kernel_shape[3];
-    int output_shape[3];
+    int dim = 3;
+    int input_shape[dim];
+    int input_shape_pad[dim];
+    int kernel_shape[dim];
+    int output_shape[dim];
     int group = atoi(option->value_group);
-    int* pads;
+    int pads = atoi(option->value_pads);
 
     char* input_f_name, *kernel_f_name;
 
@@ -160,6 +159,7 @@ void do_conv(struct kernel_options* option) {
     printf("kernel fcount : %d\n", kernel_fcount);
 
     //malloc using float count
+    float* input_data_pad;
     float* input_data = (float*) malloc(sizeof(float) * input_fcount);
     float* kernel_data = (float*) malloc(sizeof(float) * kernel_fcount);
 
@@ -167,24 +167,60 @@ void do_conv(struct kernel_options* option) {
     _readbinary(option->value_input, input_data, input_fcount);
     _readbinary(option->value_kernel, kernel_data, kernel_fcount);
 
-    //run conv
+
+    //make input and kernel tensor
     struct tensor* input_tensor = malloc(sizeof(struct tensor));
     input_tensor->data = input_data;
-    input_tensor->n_dim = 3;
+    input_tensor->n_dim = dim;
     input_tensor->shape = input_shape;
+
+    printtensor(input_tensor, "input");
+
+    for(int i = dim - 1; i >= 0; i--){
+        if(i != 0) {
+            input_shape_pad[i] = input_tensor->shape[i] + (2 * pads);
+        } else {
+            input_shape_pad[i] = input_tensor->shape[i];
+        }
+    }
+
+    int input_count_pad = getcountshape(input_shape_pad, dim);
+    input_data_pad = (float*)malloc(sizeof(float) * input_count_pad);
+    memset(input_data_pad, 0, sizeof(float) * input_count_pad);
+    
+    int first_pad = input_shape_pad[2] + pads;
+    int pad_step = (2 * pads) + input_tensor->shape[2];
+    if(pads != 0) {
+        for(int i=0; i<input_tensor->shape[1]; i++){
+            memcpy(input_data_pad + first_pad + (i * pad_step), input_tensor->data + (i * input_tensor->shape[2]), sizeof(float) * input_tensor->shape[2]);
+        }
+        input_tensor->data = input_data_pad;
+        input_tensor->shape = input_shape_pad;
+    }
 
     struct tensor* kernel_tensor = malloc(sizeof(struct tensor));
     kernel_tensor->data = kernel_data;
     kernel_tensor->n_dim = 3;
     kernel_tensor->shape = kernel_shape;
 
-    int output_size = getresultshape(input_tensor, kernel_tensor, pads);
+    //make output tensor
     struct tensor* output_tensor = malloc(sizeof(struct tensor));
-    output_tensor->n_dim = 3;
+    output_tensor->n_dim = input_tensor->n_dim;
     output_tensor->shape = output_shape;
-    output_tensor->data = malloc(sizeof(float) * output_size);
+    getresultshape(input_tensor, kernel_tensor, output_tensor);
+    int output_count = getcount(output_tensor);
+    float output_data[output_count];
+    for(int i = 0; i < output_count; i++){
+        output_data[i] = 0;
+    }
+    output_tensor->data = output_data;
 
+    printtensor(input_tensor, "input");
+    printtensor(kernel_tensor, "kernel");
+
+    //run conv
     conv2d(input_tensor, output_tensor, kernel_tensor, group, pads);
+    printtensor(output_tensor, "output");
 }
 
 void do_gen(struct kernel_options* option) {
@@ -205,13 +241,13 @@ void do_gen(struct kernel_options* option) {
     for(int c = 0; c < count; c++)
     {
         char filename[1024];
-        sprintf(filename, "%s_%s_%d_%d.%s", option->value_width, option->value_height, channel, c, ext);
+        sprintf(filename, "%d_%s_%s_%d.%s", channel, option->value_height, option->value_width, c, ext);
 
         if( access(filename, F_OK) != -1 )
             remove(filename);
 
         FILE *f = fopen(filename, "wb");
-
+        srand(time(NULL));
         for(int ch = 0; ch < channel; ch++) {
             float arr[width * height];
             for(int i = 0; i < width * height; i++) {
@@ -364,9 +400,9 @@ int main(int argc, char** argv) {
             options.value_group = "1";
         }
 
-        if(!options.flag_group) {
-            options.flag_group = true;
-            options.value_group = "1";
+        if(!options.flag_pads) {
+            options.flag_pads = true;
+            options.value_pads = "0";
         }
 
         if(options.flag_input == false || options.value_input == NULL || options.flag_kernel == false || options.value_kernel == NULL) {
