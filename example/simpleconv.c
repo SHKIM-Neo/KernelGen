@@ -5,8 +5,6 @@ int conv2d(struct tensor* input, struct tensor* output, struct tensor* kernel, i
     int output_idx = 0;
     int kernel_idx = 0;
 
-    printf("--- output shape - h : %d, w : %d\n", output->shape[1], output->shape[2]);
-
     int output_w = output->shape[2];
     int output_h = output->shape[1];
     int output_c = output->shape[0];
