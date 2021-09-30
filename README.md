@@ -1,5 +1,6 @@
 # KernelGen
-Binary file generator of kernel or image(feature map) with random float number
+- Binary file generator of kernel or feature map with random float number
+- Simple convolution implementation in C
 
 ## Overview
 - Runnble on linux only (if you run on windows, you need mingw)
