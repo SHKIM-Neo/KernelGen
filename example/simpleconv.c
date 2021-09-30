@@ -10,7 +10,6 @@ int conv2d(struct tensor* input, struct tensor* output, struct tensor* kernel, i
         for(int idx_o_c = start_channel; idx_o_c < end_channel; idx_o_c++){
             for(int idx_o_h = 0; idx_o_h < output->shape[1]; idx_o_h++){
                 for(int idx_o_w = 0; idx_o_w < output->shape[2]; idx_o_w++) {
-                    printf("channel -- start ch. : %d, end ch. : %d, group : %d\n", start_channel, end_channel, g);
                     for(int idx_k_c = start_channel; idx_k_c < end_channel; idx_k_c++) {
                         for(int idx_k_h = 0; idx_k_h < kernel->shape[1]; idx_k_h++) {
                             for(int idx_k_w = 0; idx_k_w < kernel->shape[2]; idx_k_w++) {
