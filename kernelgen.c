@@ -158,6 +158,11 @@ void do_conv(struct kernel_options* option) {
     printf("input fcount : %d\n", input_fcount);
     printf("kernel fcount : %d\n", kernel_fcount);
 
+    if(input_shape[0] % group != 0 || kernel_shape[0] % group != 0) {
+        printf("input channel and kernel channel must be divisible by groups! -- input channel : %d, kernel channel : %d, group : %d\n", input_shape[0], kernel_shape[0], group);
+        return;
+    }
+
     //malloc using float count
     float* input_data_pad;
     float* input_data = (float*) malloc(sizeof(float) * input_fcount);
@@ -173,8 +178,6 @@ void do_conv(struct kernel_options* option) {
     input_tensor->data = input_data;
     input_tensor->n_dim = dim;
     input_tensor->shape = input_shape;
-
-    printtensor(input_tensor, "input");
 
     for(int i = dim - 1; i >= 0; i--){
         if(i != 0) {
@@ -207,7 +210,7 @@ void do_conv(struct kernel_options* option) {
     struct tensor* output_tensor = malloc(sizeof(struct tensor));
     output_tensor->n_dim = input_tensor->n_dim;
     output_tensor->shape = output_shape;
-    getresultshape(input_tensor, kernel_tensor, output_tensor);
+    getresultshape(input_tensor, kernel_tensor, output_tensor, group);
     int output_count = getcount(output_tensor);
     float output_data[output_count];
     for(int i = 0; i < output_count; i++){

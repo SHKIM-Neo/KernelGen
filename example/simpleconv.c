@@ -4,16 +4,25 @@
 int conv2d(struct tensor* input, struct tensor* output, struct tensor* kernel, int group, int pads) {
     int output_idx = 0;
     int kernel_idx = 0;
-    for(int idx1 = 0; idx1 < output->shape[1]; idx1++){
-        for(int idx2 = 0; idx2 < output->shape[2]; idx2++) {
-            for(int idx3 = 0; idx3 < kernel->shape[1]; idx3++) {
-                for(int idx4 = 0; idx4 < kernel->shape[2]; idx4++) {
-                    float val1 = input->data[(input->shape[2] * idx1)+ idx2 +(input->shape[2] * idx3) + idx4];
-                    float val2 = kernel->data[(kernel->shape[2] * idx3) + idx4];
-                    output->data[output_idx] += val1 * val2;
-                }   
+    for(int g = 0; g < group; g++){
+        int start_channel = g * (kernel->shape[0] / group);
+        int end_channel = g * (kernel->shape[0] / group) + (kernel->shape[0] / group);
+        for(int idx_o_c = start_channel; idx_o_c < end_channel; idx_o_c++){
+            for(int idx_o_h = 0; idx_o_h < output->shape[1]; idx_o_h++){
+                for(int idx_o_w = 0; idx_o_w < output->shape[2]; idx_o_w++) {
+                    printf("channel -- start ch. : %d, end ch. : %d, group : %d\n", start_channel, end_channel, g);
+                    for(int idx_k_c = start_channel; idx_k_c < end_channel; idx_k_c++) {
+                        for(int idx_k_h = 0; idx_k_h < kernel->shape[1]; idx_k_h++) {
+                            for(int idx_k_w = 0; idx_k_w < kernel->shape[2]; idx_k_w++) {
+                                float val1 = input->data[ (input->shape[1] * input->shape[2] * idx_k_c) + (input->shape[2] * idx_o_h) + idx_o_w + (input->shape[2] * idx_k_h) + idx_k_w];
+                                float val2 = kernel->data[ (kernel->shape[1] * kernel->shape[2] * idx_k_c) + (kernel->shape[2] * idx_k_h) + idx_k_w];
+                                output->data[output_idx] += val1 * val2;
+                            }
+                        }
+                    }
+                    output_idx++;
+                }
             }
-            output_idx++;
         }
     }
 }
@@ -34,25 +43,29 @@ int getcountshape(int* shape, int dim){
     return count;
 }
 
-void getresultshape(struct tensor* input, struct tensor* kernel, struct tensor* output){
+void getresultshape(struct tensor* input, struct tensor* kernel, struct tensor* output, int group){
+    //init
     for(int idx = 0; idx < output->n_dim; idx++) {
          output->shape[idx] = 1;
     }
 
-    for(int idx = output->n_dim - 1; idx > 0; idx--) {
-         output->shape[idx] = ((input->shape[idx] - kernel->shape[idx]) / 1 ) + 1;
-     }
+    for(int idx = output->n_dim - 1; idx >= 0; idx--) {
+        if(idx != 0) //H, W
+            output->shape[idx] = ((input->shape[idx] - kernel->shape[idx]) / 1 ) + 1;
+        else 
+            output->shape[idx] = (((input->shape[idx] - kernel->shape[idx]) / 1 ) + 1) * group;
+    }
 }
 
 void printtensor(struct tensor* t, const char* text){
     int dim = t->n_dim;
     int count = getcount(t);
-
+    const char* caption[10] = {"channel", "height", "width"};
     printf("tensor info ---------------- %s\n", text);
     printf("dim : %d\n", t->n_dim);
-    printf("shape : ");
+    printf("shape -- ");
     for(int i = dim-1; i >= 0; i--){
-        printf("%d ", t->shape[i]);
+        printf("%s : %d ", caption[i], t->shape[i]);
     }
     printf("\n");
     printf("data : \n");
