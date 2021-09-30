@@ -7,8 +7,8 @@
 - It developed on Visual Studio Code (Windows with mingw)
 
 ## Build
-- Linux : gcc kernelgen.c -o kernelgen
-- Windows : gcc kernelgen.c -o kernelge.exe
+- Linux : gcc -o kernelgen kernelgen.c .\example\simpleconv.c
+- Windows : gcc -o kernelgen.exe kernelgen.c .\example\simpleconv.c
 
 ## Run
 ### Kernel Generation
