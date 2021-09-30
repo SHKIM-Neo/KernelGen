@@ -225,7 +225,7 @@ void do_conv(struct kernel_options* option) {
 
     printtensor(input_tensor, "input");
     printtensor(kernel_tensor, "kernel");
-    printtensor(output_tensor, "output");
+    //printtensor(output_tensor, "output");
 
     //run conv
     conv2d(input_tensor, output_tensor, kernel_tensor, group, pads);

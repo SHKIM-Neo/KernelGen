@@ -17,7 +17,6 @@ int conv2d(struct tensor* input, struct tensor* output, struct tensor* kernel, i
         for(int idx_o_h = 0; idx_o_h < output_h; idx_o_h++){
             for(int idx_o_w = 0; idx_o_w < output_w; idx_o_w++) {
                 for(int idx_k_c = start_channel; idx_k_c < end_channel; idx_k_c++) {
-                    printf("g : %d, startchannel : %d, endchannel : %d, ch. : %d\n", g, start_channel, end_channel, idx_k_c);
                     for(int idx_k_h = 0; idx_k_h < kernel->shape[1]; idx_k_h++) {
                         for(int idx_k_w = 0; idx_k_w < kernel->shape[2]; idx_k_w++) {
                             float val1 = input->data[ (input->shape[1] * input->shape[2] * idx_k_c) + (input->shape[2] * idx_o_h) + idx_o_w + (input->shape[2] * idx_k_h) + idx_k_w];
@@ -27,7 +26,6 @@ int conv2d(struct tensor* input, struct tensor* output, struct tensor* kernel, i
                     }
                 }
                 output_idx++;
-                printf("output count : %d\n", output_idx);
             }
         }
     }
