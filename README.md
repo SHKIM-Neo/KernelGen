@@ -29,5 +29,5 @@ kernelgen --exam EXAM | --input INPUT_PATH | --kernel KERNEL_PATH | --group GROU
 - exam : only support "CONV"
 - input : input file path
 - kernel : kernel file path
-- group : (not implemented) - default : 0
+- group : group for depthwise convolution - default : 1
 - pads : padding of convolution - default : 0
