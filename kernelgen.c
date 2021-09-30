@@ -158,6 +158,11 @@ void do_conv(struct kernel_options* option) {
     printf("input fcount : %d\n", input_fcount);
     printf("kernel fcount : %d\n", kernel_fcount);
 
+    if(input_shape[0] != kernel_shape[0]) {
+        printf("input channel and kernel channel are must be the same!\n");
+        return;
+    }
+
     if(input_shape[0] % group != 0 || kernel_shape[0] % group != 0) {
         printf("input channel and kernel channel must be divisible by groups! -- input channel : %d, kernel channel : %d, group : %d\n", input_shape[0], kernel_shape[0], group);
         return;
@@ -220,6 +225,7 @@ void do_conv(struct kernel_options* option) {
 
     printtensor(input_tensor, "input");
     printtensor(kernel_tensor, "kernel");
+    printtensor(output_tensor, "output");
 
     //run conv
     conv2d(input_tensor, output_tensor, kernel_tensor, group, pads);
