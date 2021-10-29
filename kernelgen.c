@@ -24,7 +24,7 @@ static void print_usage() {
     puts("  --width WIDTH         set width of kernel [int] -- (default : 128)");
     puts("  --height HEIGHT       set height of kernel [int] -- (default : 128)");
     puts("  --channel CHANNEL     set channel of kernel [int] -- (default : 1)");
-    puts("  --count COUNT         number of kernels to be created [int] -- (default : 512)");
+    puts("  --count COUNT         number of kernels to be created [int] -- (default : 5)");
     puts("  --min MIN             set min value in random number generator [float] -- (range : [min, max], default 0.0)");
     puts("  --max MAX             set max value in random number generator [float] -- (range : [min, max], default 1.0)");
     puts(" optional arguments - for running example : ");
@@ -242,7 +242,6 @@ void do_gen(struct kernel_options* option) {
     float max = atof(option->value_max);
     char* ext;
 
-    printf("data type : %s\n", option->value_type);
     if(strcmp(option->value_type, "INPUT") == 0) {
         ext = "input";
     }
@@ -272,7 +271,7 @@ void do_gen(struct kernel_options* option) {
         if(strcmp(ext, "data") == 0){ //connx gen. header
             unsigned int dtype = 1;
             unsigned int dim = 3;
-            printf("size of unsigned int : %d\n", sizeof(unsigned int));
+
             fwrite(&dtype, sizeof(unsigned int), 1, f);
             fwrite(&dim, sizeof(unsigned int), 1, f);
             fwrite(&channel, sizeof(unsigned int), 1, f);
