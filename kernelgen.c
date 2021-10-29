@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
         }
         if(!options.flag_count) {
             options.flag_count = true;
-            options.value_count = "4";
+            options.value_count = "5";
         }
         if(!options.flag_min) {
             options.flag_min = true;
