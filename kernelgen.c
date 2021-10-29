@@ -13,12 +13,13 @@ static void print_usage() {
     puts("usage: kernelgen [--help]");
     puts("                 (--type TYPE | --dtype TYPE | --width WIDTH | --height HEIGHT | --channel CHANNEL | --count COUNT | --min MIN | --max MAX )");
     puts("                 (--exam EXAM | --input FILE_PATH | --kernel KERNEL_PATH | --group GROUP | --pads [] ) ");
+    puts("                 (--convert FILE_PATH");
     puts("");
     puts(" help");
     puts("  --help                show this help message and exit");
     puts("");
     puts(" optional arguments - for kernel generation : ");
-    puts("  --type TYPE           set output file type [string] -- (it can be \"INPUT\" or \"KERNEL\")");
+    puts("  --type TYPE           set output file type [string] -- (it can be \"INPUT\", \"KERNEL\", \"CONNX\" )");
     puts("  --dtype TYPE          set data type of kernel [string] -- (default : FLOAT32)");
     puts("  --width WIDTH         set width of kernel [int] -- (default : 128)");
     puts("  --height HEIGHT       set height of kernel [int] -- (default : 128)");
@@ -32,6 +33,7 @@ static void print_usage() {
     puts("  --kernel              set kernel directory [string] -- (selected all kernel files in given directory path)");
     puts("  --group               set param group for convolution [int] -- (default : 1)");
     puts("  --pads                set param pads for convolution. [int] -- (default : 0)");
+
 }
 
 //generate float [min, max] range
@@ -240,10 +242,21 @@ void do_gen(struct kernel_options* option) {
     float max = atof(option->value_max);
     char* ext;
 
+    printf("data type : %s\n", option->value_type);
     if(strcmp(option->value_type, "INPUT") == 0) {
         ext = "input";
-    } else {
+    }
+    
+    else if(strcmp(option->value_type, "KERNEL") == 0) {
         ext = "kernel";
+    }
+
+    else if(strcmp(option->value_type, "CONNX") == 0) {
+        ext = "data";
+    } 
+    else {
+        printf("Cannot support type : %s\n", option->value_type);
+        return;
     }
 
     for(int c = 0; c < count; c++)
@@ -255,6 +268,18 @@ void do_gen(struct kernel_options* option) {
             remove(filename);
 
         FILE *f = fopen(filename, "wb");
+
+        if(strcmp(ext, "data") == 0){ //connx gen. header
+            unsigned int dtype = 1;
+            unsigned int dim = 3;
+            printf("size of unsigned int : %d\n", sizeof(unsigned int));
+            fwrite(&dtype, sizeof(unsigned int), 1, f);
+            fwrite(&dim, sizeof(unsigned int), 1, f);
+            fwrite(&channel, sizeof(unsigned int), 1, f);
+            fwrite(&height, sizeof(unsigned int), 1, f);
+            fwrite(&width, sizeof(unsigned int), 1, f);
+        }
+
         srand(time(NULL));
         for(int ch = 0; ch < channel; ch++) {
             float arr[width * height];
