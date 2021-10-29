@@ -13,15 +13,16 @@
 ## Run
 ### Kernel Generation
 ```
-kernelgen --type TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --channel CHANNEL | --min MIN | --max MAX 
+kernelgen --type TYPE | --dtype TYPE | --width WIDTH | --height HEIGHT | --count COUNT | --channel CHANNEL | --min MIN | --max MAX 
 ```
-- type : "KERNEL" or "INPUT"
-- width : width of kernel or feature map - default : 128
-- height : height of kernel or feature map - default : 128
-- channel : channel of kernel or feature map - default : 1
-- count : number of kernel or feature map - default : 4
-- min : min value of kernel or feature map (this value use on random float number generation) - default : 0.0
-- max : max value of kernel or feature map (this value use on random float number generation) - default : 1.0
+- type TYPE[string] : "KERNEL", "INPUT", "CONNX"
+- dtype TYPE[string] : data type of data (only support "FLOAT32") - default : "FLOAT32"
+- width WIDTH[int] : width of kernel or feature map - default : 128
+- height HEIGHT[int] : height of kernel or feature map - default : 128
+- channel CHANNEL[int] : channel of kernel or feature map - default : 1
+- count COUNT[int] : number of kernel or feature map - default : 5
+- min MIN[float] : min value of kernel or feature map (this value use on random float number generation) - default : 0.0
+- max MAX[float] : max value of kernel or feature map (this value use on random float number generation) - default : 1.0
 
 ### Example : Convolution 2d
 ```
