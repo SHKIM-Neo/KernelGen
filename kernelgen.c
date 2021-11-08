@@ -258,10 +258,9 @@ void do_gen(struct kernel_options* option) {
         return;
     }
 
-    for(int c = 0; c < count; c++)
-    {
+    if(strcmp(option->value_type, "CONNX") == 0) {
         char filename[1024];
-        sprintf(filename, "%d_%s_%s_%d.%s", channel, option->value_height, option->value_width, c, ext);
+        sprintf(filename, "%d_%s_%s.%s", channel, option->value_height, option->value_width, ext);
 
         if( access(filename, F_OK) != -1 )
             remove(filename);
@@ -270,29 +269,61 @@ void do_gen(struct kernel_options* option) {
 
         if(strcmp(ext, "data") == 0){ //connx gen. header
             unsigned int dtype = 1;
-            unsigned int dim = 3;
+            unsigned int dim = 4;
 
             fwrite(&dtype, sizeof(unsigned int), 1, f);
             fwrite(&dim, sizeof(unsigned int), 1, f);
+            fwrite(&count, sizeof(unsigned int), 1, f);
             fwrite(&channel, sizeof(unsigned int), 1, f);
             fwrite(&height, sizeof(unsigned int), 1, f);
             fwrite(&width, sizeof(unsigned int), 1, f);
         }
 
         srand(time(NULL));
-        for(int ch = 0; ch < channel; ch++) {
-            float arr[width * height];
-            for(int i = 0; i < width * height; i++) {
-                arr[i] = _randomgen(min, max);
-            }
+        for(int c = 0; c < count; c++){
+            for(int ch = 0; ch < channel; ch++) {
+                float arr[width * height];
+                for(int i = 0; i < width * height; i++) {
+                    arr[i] = _randomgen(min, max);
+                }
 
-            for(int i = 0; i < width * height; i++) {
-                float f_data = arr[i];
-                fwrite(&f_data, sizeof(float), 1, f);
+                for(int i = 0; i < width * height; i++) {
+                    float f_data = arr[i];
+                    fwrite(&f_data, sizeof(float), 1, f);
+                }
             }
         }
         fclose(f);
+        
     }
+    else if(strcmp(option->value_type, "INPUT") == 0 || strcmp(option->value_type, "KERNEL") == 0) {
+        for(int c = 0; c < count; c++)
+        {
+            char filename[1024];
+            sprintf(filename, "%d_%s_%s_%d.%s", channel, option->value_height, option->value_width, c, ext);
+
+            if( access(filename, F_OK) != -1 )
+                remove(filename);
+
+            FILE *f = fopen(filename, "wb");
+
+            srand(time(NULL));
+            for(int ch = 0; ch < channel; ch++) {
+                float arr[width * height];
+                for(int i = 0; i < width * height; i++) {
+                    arr[i] = _randomgen(min, max);
+                }
+
+                for(int i = 0; i < width * height; i++) {
+                    float f_data = arr[i];
+                    fwrite(&f_data, sizeof(float), 1, f);
+                }
+            }
+            fclose(f);
+        }
+    }
+
+    
     puts("Generation Complete.");
 }
 
